@@ -43,6 +43,14 @@ resource "aws_lambda_function" "api" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash,
+      last_modified,
+    ]
+  }
+
   depends_on = [
     aws_cloudwatch_log_group.lambda,
     aws_iam_role_policy_attachment.lambda_basic

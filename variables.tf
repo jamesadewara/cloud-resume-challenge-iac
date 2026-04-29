@@ -1,11 +1,13 @@
 variable "aws_region" {
-  type    = string
-  default = "us-east-1"
+  description = "AWS region for all resources"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "project_name" {
-  type    = string
-  default = "resume"
+  description = "Project name used for resource naming prefixes"
+  type        = string
+  default     = "resume"
 }
 
 variable "bucket_name" {

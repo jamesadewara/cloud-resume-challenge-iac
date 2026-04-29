@@ -1,4 +1,5 @@
 # 🏗️ Cloud Resume Challenge - Infrastructure (IaC)
+github repo: https://github.com/jamesadewara/cloud-resume-challenge-iac.git
 
 This directory contains the **Terraform** configuration to provision and manage the AWS and Cloudflare infrastructure for the Cloud Resume Challenge.
 
@@ -37,12 +38,23 @@ terraform apply
 
 ## 📂 Module Descriptions
 
-| Module | Purpose |
-| :--- | :--- |
-| `s3-static-site` | Creates the S3 bucket and configures it for website hosting. |
-| `cloudflare-dns` | Hooks up your domain to the S3 bucket via CNAME records. |
-| `lambda-api` | Sets up the API Gateway and Lambda skeleton for the backend. |
 | `github-oidc` | Configures IAM roles for secure CI/CD from GitHub. |
+| `lambda-api` | Sets up the API Gateway and Lambda skeleton for the backend. |
+
+## ⚙️ GitHub Actions Configuration
+
+To support the CI/CD pipelines, you must configure the following in your GitHub repositories (**Settings > Secrets and variables > Actions**).
+
+### Repository Variables (`vars.*`)
+- `AWS_REGION`: e.g., `us-east-1`
+- `S3_BUCKET_NAME`: The name of your S3 bucket (e.g., `resume.jamesadewara.com`)
+- `LAMBDA_FUNCTION_NAME`: The name of your Lambda function (e.g., `resume-api`)
+- `DOMAIN_NAME`: Your custom domain (e.g., `resume.jamesadewara.com`)
+
+### Repository Secrets (`secrets.*`)
+- `AWS_DEPLOY_ROLE_ARN`: The ARN of the IAM role created by the `github-oidc` module.
+- `CLOUDFLARE_API_TOKEN`: (For IaC repo only) Your Cloudflare API token.
+- `MONGODB_URI`: (For IaC repo only) Your MongoDB Atlas connection string.
 
 ## 🔐 Security
 State is managed remotely in an S3 bucket with DynamoDB locking (as configured in `main.tf`). Ensure your `terraform.tfvars` is never committed to version control.
