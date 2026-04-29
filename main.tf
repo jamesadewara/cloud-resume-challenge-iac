@@ -15,7 +15,7 @@ terraform {
   backend "s3" {
     bucket         = "jamesadewara-terraform-state"
     key            = "resume/terraform.tfstate"
-    region         = "us-east-1"
+    region         = var.aws_region
     encrypt        = true
     use_lockfile   = true
   }
@@ -46,10 +46,12 @@ module "cloudflare_dns" {
 
 # 3. Lambda API (Infrastructure Only)
 module "lambda_api" {
-  source        = "./modules/lambda-api"
-  function_name = "${var.project_name}-api"
-  api_name      = "${var.project_name}-api"
-  mongodb_uri   = var.mongodb_uri
+  source          = "./modules/lambda-api"
+  function_name   = "${var.project_name}-api"
+  api_name        = "${var.project_name}-api"
+  mongodb_url     = var.mongodb_url
+  mongodb_db_name = var.mongodb_db_name
+  allowed_origins = var.allowed_origins
 }
 
 # 4. GitHub OIDC (for Backend Repo CI/CD)
@@ -57,5 +59,7 @@ module "github_oidc" {
   source              = "./modules/github-oidc"
   github_org          = var.github_org
   backend_repo_name   = var.backend_repo_name
+  resume_repo_name    = var.resume_repo_name
   lambda_function_arn = module.lambda_api.function_arn
+  s3_bucket_arn       = module.s3_static_site.bucket_arn
 }

@@ -31,10 +31,22 @@ variable "cloudflare_zone_id" {
   type        = string
 }
 
-variable "mongodb_uri" {
-  description = "MongoDB Atlas connection string"
+variable "mongodb_url" {
+  description = "MongoDB Atlas connection string (matches backend .env)"
   type        = string
   sensitive   = true
+}
+
+variable "mongodb_db_name" {
+  description = "MongoDB database name"
+  type        = string
+  default     = "resume_db"
+}
+
+variable "allowed_origins" {
+  description = "Comma-separated list of allowed CORS origins"
+  type        = string
+  default     = "http://localhost:3000,null"
 }
 
 variable "github_org" {
@@ -45,5 +57,11 @@ variable "github_org" {
 variable "backend_repo_name" {
   description = "Your backend repo name (e.g., resume-api)"
   type        = string
-  default     = "resume-api"
+  default     = "cloud-resume-challenge-backend"
+}
+
+variable "resume_repo_name" {
+  description = "Your resume repo name (e.g., resume-frontend)"
+  type        = string
+  default     = "cloud-resume-challenge-resume"
 }

@@ -1,10 +1,23 @@
 # Copy this to terraform.tfvars and fill in your values
 # NEVER commit terraform.tfvars to git!
 
+aws_region           = "us-east-1"
+project_name         = "resume"
+
+# S3 & Domain
 bucket_name          = "resume.jamesadewara.com"
 domain_name          = "resume.jamesadewara.com"
+
+# Cloudflare
 cloudflare_api_token = "your-cloudflare-api-token"
 cloudflare_zone_id   = "your-cloudflare-zone-id"
-mongodb_uri          = "mongodb+srv://username:password@cluster.mongodb.net/resume_counter"
+
+# Backend Configuration
+mongodb_url          = "mongodb+srv://username:password@cluster.mongodb.net/resume_db"
+mongodb_db_name      = "resume_db"
+allowed_origins      = "https://resume.jamesadewara.com,http://localhost:3000"
+
+# GitHub CI/CD
 github_org           = "jamesadewara"
-backend_repo_name    = "resume-api"
+backend_repo_name    = "cloud-resume-challenge-backend"
+resume_repo_name     = "cloud-resume-challenge-resume"

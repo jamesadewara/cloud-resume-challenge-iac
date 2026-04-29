@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Creates IAM role that your backend repo's GitHub Actions assumes via OIDC
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -32,9 +41,36 @@ data "aws_iam_policy_document" "backend_trust" {
   }
 }
 
+data "aws_iam_policy_document" "resume_trust" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.github_org}/${var.resume_repo_name}:*"]
+    }
+  }
+}
+
 resource "aws_iam_role" "backend_deployer" {
   name               = "github-actions-backend-deploy"
   assume_role_policy = data.aws_iam_policy_document.backend_trust.json
+  max_session_duration = 3600
+}
+
+resource "aws_iam_role" "resume_deployer" {
+  name               = "github-actions-resume-deploy"
+  assume_role_policy = data.aws_iam_policy_document.resume_trust.json
   max_session_duration = 3600
 }
 
@@ -64,6 +100,31 @@ resource "aws_iam_role_policy" "backend_deploy" {
           "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:log-group:/aws/lambda/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "resume_deploy" {
+  name = "resume-deploy-policy"
+  role = aws_iam_role.resume_deployer.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3Sync"
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:DeleteObject",
+          "s3:GetObject"
+        ]
+        Resource = [
+          var.s3_bucket_arn,
+          "${var.s3_bucket_arn}/*"
+        ]
       }
     ]
   })

@@ -22,3 +22,8 @@ output "backend_deploy_role_arn" {
   description = "Copy to backend repo GitHub Secret: AWS_DEPLOY_ROLE_ARN"
   value       = module.github_oidc.backend_deployer_role_arn
 }
+
+output "resume_deploy_role_arn" {
+  description = "Copy to resume repo GitHub Secret: AWS_DEPLOY_ROLE_ARN"
+  value       = module.github_oidc.resume_deployer_role_arn
+}

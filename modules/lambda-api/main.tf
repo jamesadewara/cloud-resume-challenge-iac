@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Creates Lambda infrastructure only — code deployed separately via GitHub Actions
 
 resource "aws_iam_role" "lambda" {
@@ -39,7 +48,9 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      MONGODB_URI = var.mongodb_uri
+      MONGODB_URL     = var.mongodb_url
+      DB_NAME         = var.mongodb_db_name
+      ALLOWED_ORIGINS = var.allowed_origins
     }
   }
 
