@@ -1,70 +1,70 @@
-# 🏗️ Cloud Resume Challenge - Infrastructure (IaC)
-github repo: https://github.com/jamesadewara/cloud-resume-challenge-iac.git
+# 🏗️ Cloud Resume Challenge - Infrastructure as Code
 
-This directory contains the **Terraform** configuration to provision and manage the AWS and Cloudflare infrastructure for the Cloud Resume Challenge.
+This repository manages the multi-cloud infrastructure for the Cloud Resume Challenge using **Terraform**. It orchestrates AWS services for compute and storage, alongside Cloudflare for global DNS and security.
 
-## 📐 Architecture Overview
+## 📐 Architecture Principles
 
-The infrastructure is modularized for clarity and reusability:
+- **Modular Design**: Infrastructure is split into logical modules (S3, Lambda, DNS, OIDC) for better maintainability.
+- **Remote State**: Terraform state is securely stored in S3 with versioning enabled.
+- **Least Privilege**: IAM roles are scoped specifically to the needs of the Lambda function and CI/CD pipelines.
+- **Security via OIDC**: Eliminates the need for long-lived AWS Access Keys in GitHub Actions by using OpenID Connect (OIDC).
 
-- **S3 Static Site**: Hosts the frontend HTML/CSS/JS.
-- **Cloudflare DNS**: Manages domain records and provides SSL/TLS.
-- **Lambda API**: Provisions the serverless function and API Gateway.
-- **GitHub OIDC**: Securely allows GitHub Actions to deploy without long-lived credentials.
-
-## 🚀 Getting Started
+## 🚀 Deployment Workflow
 
 ### 1. Prerequisites
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.5.0
-- AWS CLI configured with appropriate permissions.
-- Cloudflare API Token.
+- **Terraform 1.10+** (Uses `use_lockfile` for state locking).
+- **AWS CLI** authenticated to your account.
+- **Cloudflare API Token** with DNS Edit permissions.
 
-### 2. Initialization & Bootstrapping
-
-Before initializing, you must manually create the S3 bucket for the remote state:
-
+### 2. Remote State Bootstrap
+Run these once to prepare the backend:
 ```bash
-# 1. Create the bucket
+# Create the state bucket
 aws s3 mb s3://jamesadewara-terraform-state --region us-east-1
 
-# 2. Enable versioning (highly recommended for state files)
+# Enable versioning for state recovery
 aws s3api put-bucket-versioning --bucket jamesadewara-terraform-state --versioning-configuration Status=Enabled
+```
 
-# 3. Initialize Terraform
+### 3. Provisioning
+```bash
 terraform init
-```
-
-### 3. Configuration
-Copy the example variables file and fill in your values:
-```bash
-cp terraform.tfvars.example terraform.tfvars
-```
-
-### 4. Deployment
-```bash
 terraform plan
 terraform apply
 ```
 
-## 📂 Module Descriptions
+## 📂 Infrastructure Components
 
-| `github-oidc` | Configures IAM roles for secure CI/CD from GitHub. |
-| `lambda-api` | Sets up the API Gateway and Lambda skeleton for the backend. |
+| Module | Description |
+| :--- | :--- |
+| [**`s3-static-site`**](./modules/s3-static-site) | Provisions the website bucket, public access settings, and Website Endpoint. |
+| [**`lambda-api`**](./modules/lambda-api) | Configures the Python 3.12 Lambda, HTTP API Gateway, and environment variables. |
+| [**`cloudflare-dns`**](./modules/cloudflare-dns) | Manages CNAME records and Edge settings for the custom domain. |
+| [**`github-oidc`**](./modules/github-oidc) | Sets up the Trust Relationship between GitHub Actions and AWS IAM. |
 
-## ⚙️ GitHub Actions Configuration
+## ⚙️ CI/CD Configuration (GitHub Actions)
 
-To support the CI/CD pipelines, you must configure the following in your GitHub repositories (**Settings > Secrets and variables > Actions**).
+After running `terraform apply`, use the outputs to configure your GitHub **Secrets** and **Variables**:
 
-### Repository Variables (`vars.*`)
-- `AWS_REGION`: e.g., `us-east-1`
-- `S3_BUCKET_NAME`: The name of your S3 bucket (e.g., `resume.jamesadewara.com`)
-- `LAMBDA_FUNCTION_NAME`: The name of your Lambda function (e.g., `resume-api`)
-- `DOMAIN_NAME`: Your custom domain (e.g., `resume.jamesadewara.com`)
+### For `cloud-resume-challenge-backend`
+| Type | Name | Value |
+| :--- | :--- | :--- |
+| **Secret** | `AWS_DEPLOY_ROLE_ARN` | From `backend_deploy_role_arn` output |
+| **Variable** | `LAMBDA_FUNCTION_NAME` | `resume-api` |
+| **Variable** | `AWS_REGION` | `us-east-1` |
+| **Variable** | `API_GATEWAY_URL` | From `lambda_api_url` output |
 
-### Repository Secrets (`secrets.*`)
-- `AWS_DEPLOY_ROLE_ARN`: The ARN of the IAM role created by the `github-oidc` module.
-- `CLOUDFLARE_API_TOKEN`: (For IaC repo only) Your Cloudflare API token.
-- `MONGODB_URI`: (For IaC repo only) Your MongoDB Atlas connection string.
+### For `cloud-resume-challenge-resume`
+| Type | Name | Value |
+| :--- | :--- | :--- |
+| **Secret** | `AWS_DEPLOY_ROLE_ARN` | From `resume_deploy_role_arn` output |
+| **Variable** | `S3_BUCKET_NAME` | From `s3_bucket_name` output |
+| **Variable** | `AWS_REGION` | `us-east-1` |
 
-## 🔐 Security
-State is managed remotely in an S3 bucket with DynamoDB locking (as configured in `main.tf`). Ensure your `terraform.tfvars` is never committed to version control.
+## 🔒 State Management
+This project uses a modern Terraform backend configuration:
+- **Bucket**: `jamesadewara-terraform-state`
+- **Locking**: Native `use_lockfile` (Terraform 1.10+) for secure concurrent access.
+
+---
+*Automated with ❤️ using Terraform.*

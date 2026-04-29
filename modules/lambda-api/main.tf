@@ -38,7 +38,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 resource "aws_lambda_function" "api" {
   function_name = var.function_name
   role          = aws_iam_role.lambda.arn
-  handler       = "main.handler"
+  handler       = "app.main.handler"
   runtime       = "python3.12"
   timeout       = 30
   memory_size   = 512
