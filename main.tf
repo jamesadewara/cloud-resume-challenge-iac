@@ -41,7 +41,7 @@ module "cloudflare_dns" {
   zone_id             = var.cloudflare_zone_id
   domain_name         = var.domain_name
   s3_website_endpoint = module.s3_static_site.website_endpoint
-  s3_bucket_domain    = module.s3_static_site.bucket_regional_domain
+  s3_bucket_domain    = module.s3_static_site.website_endpoint
 }
 
 # 3. Lambda API (Infrastructure Only)
