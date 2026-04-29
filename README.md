@@ -19,8 +19,18 @@ The infrastructure is modularized for clarity and reusability:
 - AWS CLI configured with appropriate permissions.
 - Cloudflare API Token.
 
-### 2. Initialization
+### 2. Initialization & Bootstrapping
+
+Before initializing, you must manually create the S3 bucket for the remote state:
+
 ```bash
+# 1. Create the bucket
+aws s3 mb s3://jamesadewara-terraform-state --region us-east-1
+
+# 2. Enable versioning (highly recommended for state files)
+aws s3api put-bucket-versioning --bucket jamesadewara-terraform-state --versioning-configuration Status=Enabled
+
+# 3. Initialize Terraform
 terraform init
 ```
 
